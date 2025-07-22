@@ -1,0 +1,15 @@
+local-hostname: artifactory.${base_domain}
+instance-id: artifactory
+
+network:
+  version: 2
+  ethernets:
+    eth0:
+      dhcp4: false
+      addresses:
+        - 192.168.252.8/24
+      gateway4: 192.168.252.1
+      nameservers:
+        addresses: [192.168.252.1]
+        search:
+          - ${base_domain}
