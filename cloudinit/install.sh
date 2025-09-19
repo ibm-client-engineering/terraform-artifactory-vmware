@@ -4,14 +4,34 @@ set -x
 
 # output in /var/log/cloud-init-output.log
 
-# wait for subscription registration to complete
-while ! subscription-manager status; do
-    echo "Waiting for RHSM registration..."
-    sleep 10
-done
+echo "Starting RHSM registration script (Simple Content Access enabled) at $(date)"
 
-# install prereqs
-dnf install -y podman
+RHSM_USERNAME="${rhsm_username}"
+RHSM_PASSWORD="${rhsm_password}"
+
+if [[ -z "$RHSM_USERNAME" || -z "$RHSM_PASSWORD" ]]; then
+    echo "ERROR: RHSM username or password not provided. Skipping registration."
+    exit 1
+fi
+
+echo "Attempting to register system with RHSM..."
+# With Simple Content Access, --auto-attach is generally sufficient after registration.
+subscription-manager register --username="$RHSM_USERNAME" --password="$RHSM_PASSWORD" --auto-attach || {
+    echo "ERROR: RHSM registration failed."
+    exit 1
+}
+echo "RHSM registration successful. Entitlements should be available via Simple Content Access."
+
+echo "Refreshing subscriptions and updating yum/dnf metadata..."
+subscription-manager refresh || echo "WARNING: Failed to refresh subscriptions."
+yum makecache || dnf makecache || echo "WARNING: Failed to refresh package cache."
+
+echo "RHSM registration script finished at $(date)"
+
+# Install podman if not already present
+echo "Installing podman..."
+yum install -y podman || dnf install -y podman || { echo "ERROR: Failed to install podman."; exit 1; }
+echo "podman installed."
 
 export JFROG_HOME=/opt/artifactory
 mkdir -p $JFROG_HOME/var/etc
@@ -26,7 +46,7 @@ shared:
   database:
     driver: org.postgresql.Driver
     type: postgresql
-    url: jdbc:postgresql://artifactory.${base_domain}:5432/artifactory
+    url: jdbc:postgresql://${name}.${base_domain}:5432/artifactory
     username: artifactory
     password: password
   extraJavaOpts: "-Xms2g -Xmx4g"
@@ -57,7 +77,7 @@ countryName = US
 stateOrProvinceName = N/A
 localityName = N/A
 organizationName = Self-signed certificate
-commonName = artifactory.${base_domain}: Self-signed certificate
+commonName = ${name}.${base_domain}: Self-signed certificate
 
 [req_ext]
 subjectAltName = @alt_names
@@ -70,8 +90,8 @@ basicConstraints = critical, CA:true
 keyUsage = critical, digitalSignature
 
 [alt_names]
-IP.1 = 192.168.252.8
-DNS.1 = artifactory.${base_domain}
+IP.1 = ${artifactory_ip}
+DNS.1 = ${name}.${base_domain}
 EOF
 
 openssl req -x509 -newkey rsa:4096 -nodes -days 730 -keyout haproxy/artifactory.key.pem -out haproxy/artifactory.crt.pem -config haproxy/san.cnf
@@ -130,7 +150,7 @@ frontend registry
 
 backend jfrog_backend
   mode http
-  server artifactory 192.168.252.8:8082
+  server ${name} ${artifactory_ip}:8082
 EOF
 
 chown -R 100:100 $JFROG_HOME/haproxy
@@ -140,9 +160,9 @@ sysctl net.ipv4.ip_unprivileged_port_start=0
 
 podman pod create \
   --network=host \
-  --dns=192.168.252.8 \
+  --dns=${artifactory_ip} \
   --name artifactory \
-  --hostname artifactory.${base_domain}
+  --hostname ${name}.${base_domain}
 
 podman run -d --pod artifactory --name artifactory-postgres \
   -e POSTGRES_USER=artifactory \

@@ -1,6 +1,9 @@
 locals {
   metadata = templatefile("${path.module}/cloudinit/metadata.yaml", {
-    base_domain = "${var.base_domain}"
+    base_domain    = "${var.base_domain}"
+    name           = "${var.common_prefix}artifactory"
+    subnet_cidr    = "${var.subnet_cidr}"
+    artifactory_ip = "${var.artifactory_ip}"
   })
 }
 
@@ -24,6 +27,7 @@ data "cloudinit_config" "userdata" {
     content = templatefile("${path.module}/cloudinit/userdata.yaml", {
       base_domain = "${var.base_domain}"
       public_key  = tls_private_key.deployer.public_key_openssh
+      name        = "${var.common_prefix}artifactory"
     })
   }
 
@@ -33,13 +37,17 @@ data "cloudinit_config" "userdata" {
       base_domain          = "${var.base_domain}"
       artifactory_password = random_password.artifactory_password.result
       accept_license       = var.accept_license ? true : false
+      name                 = "${var.common_prefix}artifactory"
+      artifactory_ip       = "${var.artifactory_ip}"
+      rhsm_username        = "${var.rhsm_username}"
+      rhsm_password        = "${var.rhsm_password}"
     })
   }
 }
 
 resource "vsphere_virtual_machine" "artifactory" {
 
-  name             = "artifactory"
+  name             = "${var.common_prefix}artifactory"
   resource_pool_id = data.vsphere_compute_cluster.this.resource_pool_id
   datastore_id     = data.vsphere_datastore.this.id
 
@@ -82,6 +90,9 @@ resource "vsphere_virtual_machine" "artifactory" {
     eagerly_scrub    = false
     thin_provisioned = true
   }
+
+  firmware                = "efi" # Ensure this matches your Packer template's firmware type
+  efi_secure_boot_enabled = false # Disable Secure Boot during cloning
 
   clone {
     template_uuid = data.vsphere_virtual_machine.template.id

@@ -1,6 +1,6 @@
 #cloud-config
-hostname: artifactory
-fqdn: artifactory.${base_domain}
+hostname: ${name}
+fqdn: ${name}.${base_domain}
 preserve_hostname: false
 manage_etc_hosts: true
 

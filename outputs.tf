@@ -3,7 +3,7 @@ output "message" {
 }
 
 output "artifactory_url" {
-  value = "https://artifactory.${var.base_domain}:8443/ui/login/"
+  value = "https://${var.common_prefix}artifactory.${var.base_domain}:8443/ui/login/"
 }
 
 output "artifactory_ip_address" {

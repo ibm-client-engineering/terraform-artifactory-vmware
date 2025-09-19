@@ -1,30 +1,41 @@
-// Base domain from which the cluster domain is a subdomain.
+# Base domain from which the cluster domain is a subdomain.
 base_domain = "gym.lan"
 
-// Name of the vSphere server
-vsphere_server = "ocpgym-vc.techzone.ibm.local"
+# Name of the vSphere server
+vsphere_hostname = "ocpgym-vc.techzone.ibm.local"
 
-// User on the vSphere server.
-vsphere_user = "gymuser-pse232k8@techzone.ibm.local"
+# User on the vSphere server.
+vsphere_username = "gymuser-pse232k8@techzone.ibm.local"
 
-// Password of the user on the vSphere server.
+# Password of the user on the vSphere server.
 vsphere_password = "MdGaChNK"
 
-// Name of the vSphere cluster
-cluster_name = "ocp-gym"
+# Name of the vSphere cluster
+vsphere_cluster = "ocp-gym"
 
-// Name of the vSphere data center
-datacenter_name = "IBMCloud"
+# Name of the vSphere data center
+vsphere_datacenter = "IBMCloud"
 
-// Name of the vSphere data store to use for the VMs
-datastore_name = "gym-0600010stv-pse232k8-storage"
+# Name of the vSphere data store to use for the VMs
+vsphere_datastore = "gym-0600010stv-pse232k8-storage"
 
-// Name of the RHEL 9 VM template to clone to create a VM for the server
+# Name of the RHEL 9 VM template to clone to create a VM for the server
 template_name = "ocp-gym/gym-0600010stv-pse232k8/linux-rhel95-template"
 
-// Name of the VM Network for your cluster nodes
-vm_network_name = "gym-0600010stv-pse232k8-segment"
+# Name of the VM Network for your server
+vsphere_network = "gym-0600010stv-pse232k8-segment"
 
 vsphere_folder = "ocp-gym/gym-0600010stv-pse232k8"
 
+# Do not include the full path, only the name of the pool
+vsphere_resource_pool = "gym-0600010stv-pse232k8"
+
 accept_license = false
+
+# The username for your Red Hat Subscription Management (RHSM) account.
+# This variable is required.
+rhsm_username = ""
+
+# The password for your RHSM account.
+# This variable is also required.
+rhsm_password = ""

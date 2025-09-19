@@ -9,16 +9,19 @@ terraform {
       source  = "hashicorp/tls"
       version = "~> 4.0"
     }
-
+    vsphere = {
+      source  = "vmware/vsphere"
+      version = "~> 2.0"
+    }
   }
 
   required_version = ">= 1.2.0"
 }
 
 provider "vsphere" {
-  user           = var.vsphere_user
+  user           = var.vsphere_username
   password       = var.vsphere_password
-  vsphere_server = var.vsphere_server
+  vsphere_server = var.vsphere_hostname
 
   # If you have a self-signed cert
   allow_unverified_ssl = true
